@@ -81,59 +81,47 @@ namespace Graham
                     num = iter;
                 }
             }
+
             var x = points[0];
             points[0] = points[num];
             points[num] = points[0];
 
             points.Sort((a, b) => GetPolarAngle(a.y - points[0].y, a.x - points[0].x).CompareTo(GetPolarAngle(b.y - points[0].y, b.x - points[0].x)));
 
-            Point p1 = points[0];
-            Point p2 = points.Last();
+            List<Point> newPoints = new List<Point>();
 
-            List<Point> up_side = new List<Point>();
-            List<Point> down_side = new List<Point>();
+            newPoints.Add(points[0]);
+            newPoints.Add(points[1]);
+            newPoints.Add(points[2]);
 
-            up_side.Add(p1);
-            down_side.Add(p1);
-            for(var i = 1; i < points.Count(); ++i)
+            for(int i = 3; i < points.Count(); i++)
             {
-                if (i == points.Count() - 1 || Up(p1, points[i], p2))
+                while(NotRightTurn(newPoints[newPoints.Count - 2], newPoints[newPoints.Count -1], points[i]))
                 {
-                    while (up_side.Count() >= 2 && !Up(up_side[up_side.Count() - 2], up_side[up_side.Count() - 1], points[i]))
-                        up_side.RemoveAt(up_side.Count() - 1);
-                    up_side.Add(points[i]);
+                    newPoints.RemoveAt(newPoints.Count() - 1);
                 }
-                if (i == points.Count() - 1 || Down(p1, points[i], p2))
-                {
-                    while (down_side.Count() >= 2 && !Down(down_side[down_side.Count() - 2], down_side[down_side.Count() - 1], points[i]))
-                        down_side.RemoveAt(down_side.Count() - 1);
-                    down_side.Add(points[i]);
-                }
+                newPoints.Add(points[i]);
             }
-            points.Clear();
-            for (var i = 0; i < up_side.Count(); ++i)
-                points.Add(up_side[i]);
-            for (var i = 0; i < down_side.Count(); ++i)
-                points.Add(down_side[i]);
 
             LinkedList<Point> drpoints = new LinkedList<Point>();
 
-            for (var i = 0; i < points.Count(); i++)
-                drpoints.AddLast(points[i]);
+            for (var i = 0; i < newPoints.Count(); i++)
+                drpoints.AddLast(newPoints[i]);
 
             for (var iter = drpoints.First; iter != drpoints.Last; iter = iter.Next)
                 g.DrawLine(myPen, iter.Value.x, iter.Value.y, iter.Next.Value.x, iter.Next.Value.y);
+            g.DrawLine(myPen, drpoints.First.Value.x, drpoints.First.Value.y, drpoints.Last.Value.x, drpoints.Last.Value.y);
             pictureBox1.Image = bmp;
         }
 
-        bool Up(Point a, Point b, Point c)
+        public bool NotRightTurn(Point a, Point b, Point c)
         {
-            return a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y) < 0;
-        }
+            double res = (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
 
-        bool Down(Point a, Point b, Point c)
-        {
-            return a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y) > 0;
+            if (res >= 0)
+                return true;
+            else
+                return false;
         }
 
         double GetPolarAngle(int y, int x)
